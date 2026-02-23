@@ -35,6 +35,7 @@ class SecurityConfig(
                     ).permitAll()
                     .requestMatchers("/api/contact").permitAll()
                     .requestMatchers("/api/billing/webhook").permitAll()
+                    .requestMatchers("/healthz").permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().permitAll()
             }

@@ -19,7 +19,8 @@ class JwtAuthFilter(private val jwtService: JwtService) : OncePerRequestFilter()
         "/api/auth/forgot-password",
         "/api/auth/reset-password",
         "/api/contact",
-        "/api/billing/webhook"
+        "/api/billing/webhook",
+        "/healthz"
     )
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
