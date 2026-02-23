@@ -26,7 +26,7 @@ data class UpdateTenantSettingsRequest(
     @field:Size(max = 50) val businessType: String? = null,
     @field:Size(max = 20) val phone: String? = null,
     @field:Email @field:Size(max = 255) val businessEmail: String? = null,
-    @field:Size(max = 500) val website: String? = null,
+    @field:Size(max = 255) val website: String? = null,
     @field:Size(max = 20) val gstin: String? = null,
     @field:Size(max = 5000) val address: String? = null,
     @field:Size(max = 5000) val description: String? = null,

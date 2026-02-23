@@ -275,7 +275,7 @@ const ProfileDashboard = () => {
                 </div>
               </div>
               <Button asChild size="sm" className="w-full">
-                <Link to="/profile/onboarding">Continue Setup</Link>
+                <Link to="/profile/settings">Continue Setup</Link>
               </Button>
             </div>
           )}

@@ -66,7 +66,7 @@ class TenantService(
         }
 
         val settings = tenantSettingsRepository.findByTenantId(tenantId)
-            ?: TenantSettings(tenantId = tenantId, tenant = tenant)
+            ?: TenantSettings(tenant = tenant)
 
         request.businessType?.let { settings.businessType = it }
         request.phone?.let { settings.phone = it }
@@ -102,7 +102,7 @@ class TenantService(
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
 
         val billing = billingInfoRepository.findByTenantId(tenantId)
-            ?: BillingInfo(tenantId = tenantId, tenant = tenant)
+            ?: BillingInfo(tenant = tenant)
 
         request.businessName?.let { billing.businessName = it }
         request.gstin?.let { billing.gstin = it }
@@ -127,7 +127,7 @@ class TenantService(
         Files.createDirectories(dir)
 
         val settings = tenantSettingsRepository.findByTenantId(tenantId)
-            ?: TenantSettings(tenantId = tenantId, tenant = tenant)
+            ?: TenantSettings(tenant = tenant)
 
         deleteOldFile(settings.logoUrl)
 

@@ -142,7 +142,7 @@ class UserService(
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found") }
 
         val prefs = notificationPreferencesRepository.findByUserId(userId)
-            ?: NotificationPreferences(userId = userId, user = user)
+            ?: NotificationPreferences(user = user)
 
         request.orderAlerts?.let { prefs.orderAlerts = it }
         request.staffUpdates?.let { prefs.staffUpdates = it }
