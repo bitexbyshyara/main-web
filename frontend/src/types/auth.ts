@@ -7,6 +7,7 @@ export interface LoginResponse {
   token: string;
   userId: string;
   tenantId: string;
+  tenantSlug: string;
   role: 'STAFF' | 'MANAGER';
 }
 

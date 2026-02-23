@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UtensilsCrossed } from "lucide-react";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
+import { LoginResponse } from "@/types/auth";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
 const loginSchema = z.object({
@@ -33,20 +34,12 @@ const Login = () => {
   const onSubmit = async (data: LoginData) => {
     setLoading(true);
     try {
-      // TODO: Uncomment below and remove mock login when backend is connected
-      // const res = await api.post("/api/auth/login", data);
-      // login(res.data.token, {
-      //   userId: res.data.userId,
-      //   tenantId: res.data.tenantId,
-      //   role: res.data.role,
-      //   email: data.identifier,
-      // });
-
-      // Mock login — remove when backend is ready
-      login("mock-jwt-token", {
-        userId: "user-001",
-        tenantId: "tenant-001",
-        role: "MANAGER",
+      const res = await api.post<LoginResponse>("/api/auth/login", data);
+      login(res.data.token, {
+        userId: res.data.userId,
+        tenantId: res.data.tenantId,
+        tenantSlug: res.data.tenantSlug,
+        role: res.data.role,
         email: data.identifier,
       });
 

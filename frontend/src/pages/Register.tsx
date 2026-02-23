@@ -16,6 +16,7 @@ import { TIERS } from "@/lib/constants";
 import PriceTag from "@/components/PriceTag";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
+import { RegisterResponse } from "@/types/auth";
 
 /* ── Schema ─────────────────────── */
 const step1Schema = z.object({
@@ -153,30 +154,19 @@ const Register = () => {
     if (!formData) return;
     setLoading(true);
     try {
-      // Backend only supports tier 1 and 2; clamp higher tiers down
       const effectiveTier = Math.min(selectedTier, 2);
-
-      // TODO: RECONNECT — Uncomment below and remove mock login when backend is connected
-      // const res = await api.post<RegisterResponse>("/api/auth/register", {
-      //   restaurantName: formData.restaurantName,
-      //   email: formData.email,
-      //   phone: formData.phone || undefined,
-      //   password: formData.password,
-      //   tier: effectiveTier,
-      // });
-      // login(res.data.token, {
-      //   userId: res.data.userId,
-      //   tenantId: res.data.tenantId,
-      //   tenantSlug: res.data.tenantSlug,
-      //   role: res.data.role,
-      //   email: formData.email,
-      // });
-
-      // Mock login — remove when backend is ready
-      login("mock-jwt-token", {
-        userId: "user-001",
-        tenantId: "tenant-001",
-        role: "MANAGER",
+      const res = await api.post<RegisterResponse>("/api/auth/register", {
+        restaurantName: formData.restaurantName,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        password: formData.password,
+        tier: effectiveTier,
+      });
+      login(res.data.token, {
+        userId: res.data.userId,
+        tenantId: res.data.tenantId,
+        tenantSlug: res.data.tenantSlug,
+        role: res.data.role,
         email: formData.email,
       });
       toast({ title: "Welcome to BiteX!", description: "Your restaurant has been registered." });
