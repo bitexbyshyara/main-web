@@ -16,22 +16,28 @@ import javax.crypto.spec.SecretKeySpec
 class RazorpayService(
     @Value("\${app.razorpay.key-id}") private val keyId: String,
     @Value("\${app.razorpay.key-secret}") private val keySecret: String,
-    @Value("\${app.razorpay.webhook-secret}") private val webhookSecret: String
+    @Value("\${app.razorpay.webhook-secret}") private val webhookSecret: String,
+    @Value("\${app.razorpay.plan-1-monthly}") private val plan1Monthly: String,
+    @Value("\${app.razorpay.plan-1-yearly}") private val plan1Yearly: String,
+    @Value("\${app.razorpay.plan-2-monthly}") private val plan2Monthly: String,
+    @Value("\${app.razorpay.plan-2-yearly}") private val plan2Yearly: String
 ) {
     private val log = LoggerFactory.getLogger(RazorpayService::class.java)
 
     private lateinit var client: RazorpayClient
+    private lateinit var planMap: Map<String, String>
 
-    private val planMap = mapOf(
-        "1_monthly" to "plan_basic_monthly",
-        "1_yearly" to "plan_basic_yearly",
-        "2_monthly" to "plan_pro_monthly",
-        "2_yearly" to "plan_pro_yearly"
-    )
+    fun getKeyId(): String = keyId
 
     @PostConstruct
     fun init() {
         client = RazorpayClient(keyId, keySecret)
+        planMap = mapOf(
+            "1_monthly" to plan1Monthly,
+            "1_yearly" to plan1Yearly,
+            "2_monthly" to plan2Monthly,
+            "2_yearly" to plan2Yearly
+        )
     }
 
     fun getPlanId(tier: Int, billingCycle: String): String {
@@ -72,6 +78,21 @@ class RazorpayService(
                 "PAYMENT_ERROR",
                 "Payment service unavailable. Please try again."
             )
+        }
+    }
+
+    @Suppress("DefaultLocale")
+    fun verifyPaymentSignature(razorpayPaymentId: String, razorpaySubscriptionId: String, signature: String): Boolean {
+        return try {
+            val payload = "$razorpayPaymentId|$razorpaySubscriptionId"
+            val mac = Mac.getInstance("HmacSHA256")
+            mac.init(SecretKeySpec(keySecret.toByteArray(), "HmacSHA256"))
+            val computed = mac.doFinal(payload.toByteArray())
+                .joinToString("") { String.format("%02x", it) }
+            MessageDigest.isEqual(computed.toByteArray(), signature.toByteArray())
+        } catch (e: Exception) {
+            log.error("Payment signature verification error", e)
+            false
         }
     }
 

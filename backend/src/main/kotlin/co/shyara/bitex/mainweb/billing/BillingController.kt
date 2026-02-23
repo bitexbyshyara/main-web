@@ -64,6 +64,18 @@ class BillingController(
         return ResponseEntity.noContent().build()
     }
 
+    @PostMapping("/checkout")
+    @PreAuthorize("hasRole('MANAGER')")
+    fun initiateCheckout(@Valid @RequestBody request: CheckoutRequest): ResponseEntity<CheckoutResponse> {
+        return ResponseEntity.ok(billingService.initiateCheckout(tenantId(), request))
+    }
+
+    @PostMapping("/verify-payment")
+    @PreAuthorize("hasRole('MANAGER')")
+    fun verifyPayment(@Valid @RequestBody request: VerifyPaymentRequest): ResponseEntity<VerifyPaymentResponse> {
+        return ResponseEntity.ok(billingService.verifyPayment(tenantId(), request))
+    }
+
     @PostMapping("/webhook")
     fun handleWebhook(
         @RequestBody payload: String,

@@ -42,3 +42,30 @@ data class AddPaymentMethodRequest(
     @field:Size(max = 100) val label: String?,
     @field:Size(max = 100) val razorpayTokenId: String?
 )
+
+data class CheckoutRequest(
+    @field:Min(1) @field:Max(2) val tier: Int? = null,
+    @field:Size(max = 20) val billingCycle: String? = null
+)
+
+data class CheckoutResponse(
+    val razorpaySubscriptionId: String,
+    val razorpayKeyId: String,
+    val amount: Int,
+    val currency: String,
+    val planName: String,
+    val tier: Int,
+    val billingCycle: String
+)
+
+data class VerifyPaymentRequest(
+    @field:Size(max = 100) val razorpayPaymentId: String,
+    @field:Size(max = 100) val razorpaySubscriptionId: String,
+    @field:Size(max = 256) val razorpaySignature: String
+)
+
+data class VerifyPaymentResponse(
+    val status: String,
+    val message: String,
+    val subscriptionStatus: String
+)

@@ -178,6 +178,99 @@ class BillingService(
         }
     }
 
+    private val tierNames = mapOf(1 to "QR Menu", 2 to "Live Ordering")
+    private val tierPricesMonthly = mapOf(1 to 99900, 2 to 199900)
+    private val tierPricesYearly = mapOf(1 to 1018800, 2 to 2038800)
+
+    @Transactional
+    fun initiateCheckout(tenantId: UUID, request: CheckoutRequest): CheckoutResponse {
+        val tenant = tenantRepository.findById(tenantId)
+            .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
+
+        val subscription = subscriptionRepository.findByTenantId(tenantId)
+            ?: throw ApiException(HttpStatus.NOT_FOUND, "SUBSCRIPTION_NOT_FOUND", "No subscription found")
+
+        val tier = request.tier ?: tenant.tier
+        val cycle = request.billingCycle ?: tenant.billingCycle
+        val validCycles = setOf("monthly", "yearly")
+        if (cycle !in validCycles) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_BILLING_CYCLE", "Billing cycle must be 'monthly' or 'yearly'")
+        }
+
+        if (!subscription.razorpaySubscriptionId.isNullOrBlank() && subscription.status != "ACTIVE") {
+            try { razorpayService.cancelSubscription(subscription.razorpaySubscriptionId!!) } catch (_: Exception) {}
+        }
+
+        val planId = razorpayService.getPlanId(tier, cycle)
+        val ownerUser = userRepository.findAllByTenantId(tenantId).firstOrNull()
+        val ownerEmail = ownerUser?.email ?: tenant.name
+        val razorpaySubId = razorpayService.createSubscription(planId, ownerEmail)
+
+        subscription.razorpaySubscriptionId = razorpaySubId
+        subscription.razorpayPlanId = planId
+        subscription.status = "CREATED"
+        subscription.updatedAt = Instant.now()
+        subscriptionRepository.save(subscription)
+
+        tenant.tier = tier
+        tenant.billingCycle = cycle
+        tenant.updatedAt = Instant.now()
+        tenantRepository.save(tenant)
+
+        val amount = if (cycle == "yearly") tierPricesYearly[tier] ?: 0 else tierPricesMonthly[tier] ?: 0
+        val tierName = tierNames[tier] ?: "Unknown"
+
+        return CheckoutResponse(
+            razorpaySubscriptionId = razorpaySubId,
+            razorpayKeyId = razorpayService.getKeyId(),
+            amount = amount,
+            currency = "INR",
+            planName = "$tierName - ${cycle.replaceFirstChar { it.uppercase() }}",
+            tier = tier,
+            billingCycle = cycle
+        )
+    }
+
+    @Transactional
+    fun verifyPayment(tenantId: UUID, request: VerifyPaymentRequest): VerifyPaymentResponse {
+        val subscription = subscriptionRepository.findByTenantId(tenantId)
+            ?: throw ApiException(HttpStatus.NOT_FOUND, "SUBSCRIPTION_NOT_FOUND", "No subscription found")
+
+        if (subscription.razorpaySubscriptionId != request.razorpaySubscriptionId) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "SUBSCRIPTION_MISMATCH", "Subscription ID does not match")
+        }
+
+        val isValid = razorpayService.verifyPaymentSignature(
+            request.razorpayPaymentId,
+            request.razorpaySubscriptionId,
+            request.razorpaySignature
+        )
+
+        if (!isValid) {
+            log.warn("SECURITY: Payment signature verification failed for tenantId={}", tenantId)
+            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_SIGNATURE", "Payment verification failed")
+        }
+
+        subscription.status = "ACTIVE"
+        subscription.updatedAt = Instant.now()
+        subscriptionRepository.save(subscription)
+
+        val tenant = tenantRepository.findById(tenantId).orElse(null)
+        if (tenant != null) {
+            tenant.status = "ACTIVE"
+            tenant.updatedAt = Instant.now()
+            tenantRepository.save(tenant)
+        }
+
+        log.info("SECURITY: Payment verified for tenantId={} paymentId={}", tenantId, request.razorpayPaymentId)
+
+        return VerifyPaymentResponse(
+            status = "success",
+            message = "Payment verified successfully",
+            subscriptionStatus = "ACTIVE"
+        )
+    }
+
     @Transactional
     fun handleWebhook(payload: String, signature: String) {
         if (!razorpayService.verifyWebhookSignature(payload, signature)) {

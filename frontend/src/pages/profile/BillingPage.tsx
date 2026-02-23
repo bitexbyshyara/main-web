@@ -19,6 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import api from "@/lib/axios";
@@ -94,8 +95,9 @@ function LoadingSkeleton() {
 
 const BillingPage = () => {
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
+  const { startCheckout, isLoading: checkoutLoading } = useRazorpayCheckout();
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState(1);
   const [selectedCycle, setSelectedCycle] = useState("monthly");
@@ -122,18 +124,14 @@ const BillingPage = () => {
     enabled: isAuthenticated,
   });
 
-  const changePlanMutation = useMutation({
-    mutationFn: (data: { tier: number; billingCycle: string }) => api.put("/api/billing/plan", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["billing"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      setChangePlanOpen(false);
-      toast({ title: "Plan updated", description: "Your subscription plan has been changed." });
-    },
-    onError: (err: any) => {
-      toast({ title: "Failed to change plan", description: err.response?.data?.message || "Please try again.", variant: "destructive" });
-    },
-  });
+  const handleChangePlanCheckout = async () => {
+    setChangePlanOpen(false);
+    await startCheckout({
+      tier: selectedTier,
+      billingCycle: selectedCycle,
+      email: user?.email,
+    });
+  };
 
   const cancelMutation = useMutation({
     mutationFn: () => api.post("/api/billing/cancel"),
@@ -180,6 +178,15 @@ const BillingPage = () => {
   const tierInfo = TIERS.find((t) => t.id === subscription?.tier);
   const tierName = tierInfo?.name ?? "Unknown";
   const isActive = subscription?.status?.toLowerCase() === "active";
+  const isCreated = subscription?.status?.toLowerCase() === "created";
+
+  const handleActivate = async () => {
+    await startCheckout({
+      tier: subscription?.tier,
+      billingCycle: subscription?.billingCycle,
+      email: user?.email,
+    });
+  };
 
   const totalSpent = invoices
     .filter((inv) => inv.status.toLowerCase() === "paid")
@@ -208,6 +215,34 @@ const BillingPage = () => {
       <h1 className="text-2xl font-heading font-bold text-foreground">Billing &amp; Invoices</h1>
 
       {subError && <ErrorCard message="Failed to load subscription details. Please try again later." />}
+
+      {isCreated && subscription && (
+        <div className="bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-orange-500/5 border-2 border-orange-500/30 rounded-xl p-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-orange-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <CreditCard className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-heading font-bold text-foreground">Activate Your Subscription</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your <span className="font-semibold text-foreground">{tierName}</span> plan is ready. Complete payment to activate all features.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {tierInfo ? `₹${(subscription.billingCycle === "yearly" ? tierInfo.annualPrice : tierInfo.price).toLocaleString("en-IN")}/${subscription.billingCycle === "yearly" ? "mo (billed annually)" : "month"}` : ""}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handleActivate}
+              disabled={checkoutLoading}
+              className="bg-orange-500 text-white hover:bg-orange-600 font-semibold shadow-lg hover:scale-[1.02] transition-transform"
+            >
+              {checkoutLoading ? "Processing..." : "Pay & Activate"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {subscription && (
         <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
@@ -455,10 +490,10 @@ const BillingPage = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setChangePlanOpen(false)}>Cancel</Button>
             <Button
-              onClick={() => changePlanMutation.mutate({ tier: selectedTier, billingCycle: selectedCycle })}
-              disabled={changePlanMutation.isPending}
+              onClick={handleChangePlanCheckout}
+              disabled={checkoutLoading}
             >
-              {changePlanMutation.isPending ? "Updating..." : "Confirm Change"}
+              {checkoutLoading ? "Processing..." : "Confirm & Pay"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -25,6 +25,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRazorpayCheckout } from "@/hooks/useRazorpayCheckout";
 import { TIERS } from "@/lib/constants";
 
 interface DashboardData {
@@ -93,6 +94,7 @@ const ProfileDashboard = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showWelcome, setShowWelcome] = useState(false);
+  const { startCheckout, isLoading: checkoutLoading } = useRazorpayCheckout();
 
   useEffect(() => {
     if (searchParams.get("welcome") === "true") {
@@ -192,6 +194,39 @@ const ProfileDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Activation banner */}
+      {data.subscriptionStatus === "CREATED" && (
+        <div className="bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-orange-500/5 border-2 border-orange-500/30 rounded-xl p-5 flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0">
+              <CreditCard className="h-4.5 w-4.5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Complete payment to activate your subscription
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Your {tierName} plan is ready. Activate now to unlock all features.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() =>
+              startCheckout({
+                tier: data.tier,
+                billingCycle: data.billingCycle,
+                email: user?.email,
+              })
+            }
+            disabled={checkoutLoading}
+            className="bg-orange-500 text-white hover:bg-orange-600 font-semibold shadow-md hover:scale-[1.02] transition-transform"
+            size="sm"
+          >
+            {checkoutLoading ? "Processing..." : "Activate Now"}
+          </Button>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

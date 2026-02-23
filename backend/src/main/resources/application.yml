@@ -33,5 +33,9 @@ app:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
     webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:placeholder_webhook_secret}
+    plan-1-monthly: ${RAZORPAY_PLAN_1_MONTHLY:plan_basic_monthly}
+    plan-1-yearly: ${RAZORPAY_PLAN_1_YEARLY:plan_basic_yearly}
+    plan-2-monthly: ${RAZORPAY_PLAN_2_MONTHLY:plan_pro_monthly}
+    plan-2-yearly: ${RAZORPAY_PLAN_2_YEARLY:plan_pro_yearly}
   upload:
     dir: ${UPLOAD_DIR:./uploads}

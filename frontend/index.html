@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.shyara.co.in https://*.onrender.com http://localhost:8080" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com; connect-src 'self' https://*.shyara.co.in https://*.onrender.com https://lumberjack.razorpay.com https://api.razorpay.com http://localhost:8080" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>BiteX - Smart Restaurant POS Platform by Shyara</title>
     <meta name="description" content="BiteX is a smart restaurant POS platform by Shyara. QR-based ordering, real-time kitchen management, and seamless billing for modern restaurants." />
@@ -21,6 +21,7 @@
 
   <body>
     <div id="root"></div>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
