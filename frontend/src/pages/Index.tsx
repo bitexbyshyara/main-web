@@ -271,14 +271,13 @@ const Index = () => {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="mt-8 md:mt-10"
           >
-            <div className="aspect-video rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border">
-              <iframe
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                title="BiteX Platform Demo"
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+            <div className="aspect-video rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border bg-secondary flex items-center justify-center">
+              <div className="text-center space-y-3">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <Play className="h-6 w-6 text-primary ml-0.5" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">Demo Video Coming Soon</p>
+              </div>
             </div>
             <p className="mt-3 md:mt-4 text-xs md:text-sm text-muted-foreground">
               BiteX Platform Demo — Restaurant Management Made Easy

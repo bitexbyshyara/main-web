@@ -39,6 +39,12 @@ class User(
     @Column(name = "two_fa_enabled", nullable = false)
     var twoFaEnabled: Boolean = false,
 
+    @Column(name = "login_attempts", nullable = false)
+    var loginAttempts: Int = 0,
+
+    @Column(name = "locked_until")
+    var lockedUntil: Instant? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
 

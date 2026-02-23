@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ExternalLink,
   ArrowRight,
@@ -11,9 +12,16 @@ import {
   Receipt,
   ClipboardCheck,
   RefreshCw,
+  Sparkles,
+  Settings,
+  CreditCard,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,6 +91,16 @@ function DashboardSkeleton() {
 
 const ProfileDashboard = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("welcome") === "true") {
+      setShowWelcome(true);
+      searchParams.delete("welcome");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const { data, isLoading, isError, refetch } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
@@ -286,16 +304,69 @@ const ProfileDashboard = () => {
         <div>
           <h3 className="font-heading font-semibold text-foreground">Questions? We're here to help!</h3>
           <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> +91 98765 43210</span>
-            <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> support@bitex.in</span>
+            <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> +91 95846 61610</span>
+            <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> support@shyara.co.in</span>
           </div>
         </div>
         <Button asChild className="bg-success text-primary-foreground hover:bg-success/90">
-          <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer">
+          <a href="https://wa.me/919584661610" target="_blank" rel="noopener noreferrer">
             <MessageCircle className="h-4 w-4 mr-1.5" /> Chat with us
           </a>
         </Button>
       </div>
+
+      {/* Welcome Modal */}
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-xl">Welcome to BiteX!</DialogTitle>
+            <DialogDescription>
+              Your restaurant account has been created. Here's how to get started:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Link to="/profile/settings" onClick={() => setShowWelcome(false)} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Settings className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Complete your profile</p>
+                <p className="text-xs text-muted-foreground">Add your restaurant details and logo</p>
+              </div>
+            </Link>
+            <Link to="/profile/billing" onClick={() => setShowWelcome(false)} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <CreditCard className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Set up billing</p>
+                <p className="text-xs text-muted-foreground">Add a payment method to activate your subscription</p>
+              </div>
+            </Link>
+            <a
+              href={`${import.meta.env.VITE_POS_URL || "https://bitex-pos.shyara.co.in"}/dashboard`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
+              onClick={() => setShowWelcome(false)}
+            >
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <LayoutDashboard className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Open POS Dashboard</p>
+                <p className="text-xs text-muted-foreground">Start managing your restaurant's menu and orders</p>
+              </div>
+            </a>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowWelcome(false)} className="w-full">Got it, let's go!</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

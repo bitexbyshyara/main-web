@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,8 +23,16 @@ type LoginData = z.infer<typeof loginSchema>;
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
+  const redirectTo = (location.state as { from?: string })?.from || "/profile";
+
+  if (isAuthenticated) {
+    navigate("/profile", { replace: true });
+    return null;
+  }
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -35,7 +43,7 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await api.post<LoginResponse>("/api/auth/login", data);
-      login(res.data.token, {
+      login(res.data.token, res.data.refreshToken, {
         userId: res.data.userId,
         tenantId: res.data.tenantId,
         tenantSlug: res.data.tenantSlug,
@@ -43,7 +51,7 @@ const Login = () => {
         email: res.data.email,
       });
 
-      navigate("/profile");
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       toast({ title: "Login failed", description: err.response?.data?.message || "Invalid credentials.", variant: "destructive" });
     } finally {
@@ -106,13 +114,12 @@ const Login = () => {
               {loading ? "Signing in…" : "Sign In"}
             </Button>
             <div className="text-center space-y-2">
-              <button
-                type="button"
-                onClick={() => toast({ title: "Contact Support", description: "Please email support@shyara.co.in for password reset." })}
+              <Link
+                to="/forgot-password"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Forgot password?
-              </button>
+              </Link>
               <p className="text-sm text-muted-foreground">
                 New restaurant? <Link to="/register" className="text-foreground hover:underline font-medium">Register here</Link>
               </p>

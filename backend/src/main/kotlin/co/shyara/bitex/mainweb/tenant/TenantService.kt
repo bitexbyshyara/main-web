@@ -1,12 +1,14 @@
 package co.shyara.bitex.mainweb.tenant
 
 import co.shyara.bitex.mainweb.common.ApiException
+import co.shyara.bitex.mainweb.common.FileUploadUtil
 import co.shyara.bitex.mainweb.model.BillingInfo
 import co.shyara.bitex.mainweb.model.TenantSettings
 import co.shyara.bitex.mainweb.repository.BillingInfoRepository
 import co.shyara.bitex.mainweb.repository.TenantRepository
 import co.shyara.bitex.mainweb.repository.TenantSettingsRepository
 import co.shyara.bitex.mainweb.tenant.dto.*
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -25,11 +27,7 @@ class TenantService(
     private val billingInfoRepository: BillingInfoRepository,
     @Value("\${app.upload.dir:uploads}") private val uploadDir: String
 ) {
-
-    companion object {
-        private val ALLOWED_IMAGE_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
-        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
-    }
+    private val log = LoggerFactory.getLogger(TenantService::class.java)
 
     @Transactional(readOnly = true)
     fun getSettings(tenantId: UUID): TenantSettingsResponse {
@@ -120,7 +118,7 @@ class TenantService(
 
     @Transactional
     fun uploadLogo(tenantId: UUID, file: MultipartFile): TenantSettingsResponse {
-        validateImageFile(file)
+        FileUploadUtil.validateImageFile(file)
 
         val tenant = tenantRepository.findById(tenantId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
@@ -128,36 +126,33 @@ class TenantService(
         val dir = Paths.get(uploadDir, "logos")
         Files.createDirectories(dir)
 
-        val extension = resolveExtension(file)
-        val filename = "${tenantId}_${System.currentTimeMillis()}.$extension"
+        val settings = tenantSettingsRepository.findByTenantId(tenantId)
+            ?: TenantSettings(tenantId = tenantId, tenant = tenant)
+
+        deleteOldFile(settings.logoUrl)
+
+        val extension = FileUploadUtil.resolveExtension(file)
+        val filename = "${UUID.randomUUID()}.$extension"
         val filePath = dir.resolve(filename)
 
         Files.copy(file.inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
 
-        val settings = tenantSettingsRepository.findByTenantId(tenantId)
-            ?: TenantSettings(tenantId = tenantId, tenant = tenant)
-
         settings.logoUrl = "/uploads/logos/$filename"
         tenantSettingsRepository.save(settings)
+
+        log.info("SECURITY: Logo uploaded for tenantId={}, fileSize={}", tenantId, file.size)
 
         return getSettings(tenantId)
     }
 
-    private fun validateImageFile(file: MultipartFile) {
-        if (file.isEmpty) {
-            throw ApiException(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "File is empty")
+    private fun deleteOldFile(url: String?) {
+        if (url.isNullOrBlank()) return
+        try {
+            val relativePath = url.removePrefix("/uploads/")
+            val oldFile = Paths.get(uploadDir, relativePath)
+            Files.deleteIfExists(oldFile)
+        } catch (e: Exception) {
+            log.warn("Failed to delete old file: {}", url, e)
         }
-        val contentType = file.contentType
-        if (contentType == null || contentType !in ALLOWED_IMAGE_TYPES) {
-            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "Only JPEG, PNG, GIF, and WebP images are allowed")
-        }
-    }
-
-    private fun resolveExtension(file: MultipartFile): String {
-        val fromName = file.originalFilename
-            ?.substringAfterLast('.', "")
-            ?.lowercase()
-            ?.takeIf { it.isNotEmpty() && it in ALLOWED_EXTENSIONS }
-        return fromName ?: "png"
     }
 }

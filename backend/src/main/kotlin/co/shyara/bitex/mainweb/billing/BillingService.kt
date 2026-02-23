@@ -7,6 +7,7 @@ import co.shyara.bitex.mainweb.model.Invoice
 import co.shyara.bitex.mainweb.model.PaymentMethod
 import co.shyara.bitex.mainweb.repository.*
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +23,7 @@ class BillingService(
     private val userRepository: UserRepository,
     private val razorpayService: RazorpayService
 ) {
+    private val log = LoggerFactory.getLogger(BillingService::class.java)
 
     @Transactional(readOnly = true)
     fun getSubscription(tenantId: UUID): SubscriptionResponse {
@@ -33,8 +35,6 @@ class BillingService(
 
         return SubscriptionResponse(
             id = subscription.id.toString(),
-            razorpaySubscriptionId = subscription.razorpaySubscriptionId,
-            razorpayPlanId = subscription.razorpayPlanId,
             status = subscription.status,
             currentPeriodStart = subscription.currentPeriodStart?.toString(),
             currentPeriodEnd = subscription.currentPeriodEnd?.toString(),
@@ -45,6 +45,11 @@ class BillingService(
 
     @Transactional
     fun changePlan(tenantId: UUID, request: ChangePlanRequest): SubscriptionResponse {
+        val validCycles = setOf("monthly", "yearly")
+        if (request.billingCycle !in validCycles) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_BILLING_CYCLE", "Billing cycle must be 'monthly' or 'yearly'")
+        }
+
         val tenant = tenantRepository.findById(tenantId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
 
@@ -73,8 +78,6 @@ class BillingService(
 
         return SubscriptionResponse(
             id = subscription.id.toString(),
-            razorpaySubscriptionId = razorpaySubId,
-            razorpayPlanId = newPlanId,
             status = subscription.status,
             currentPeriodStart = subscription.currentPeriodStart?.toString(),
             currentPeriodEnd = subscription.currentPeriodEnd?.toString(),
@@ -202,6 +205,7 @@ class BillingService(
                     tenant.updatedAt = Instant.now()
                     tenantRepository.save(tenant)
                 }
+                log.info("SECURITY: Subscription activated for tenantId={}", subscription.tenantId)
             }
             "subscription.charged" -> {
                 val subData = payloadEntity.getJSONObject("subscription").getJSONObject("entity")

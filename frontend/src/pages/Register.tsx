@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { TIERS } from "@/lib/constants";
-import PriceTag from "@/components/PriceTag";
 import api from "@/lib/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { RegisterResponse } from "@/types/auth";
@@ -23,7 +22,12 @@ const step1Schema = z.object({
   restaurantName: z.string().trim().min(2, "Restaurant name is required").max(100),
   email: z.string().trim().email("Invalid email").max(255),
   phone: z.string().trim().max(15).optional().or(z.literal("")),
-  password: z.string().min(8, "Minimum 8 characters").max(128),
+  password: z.string()
+    .min(8, "Minimum 8 characters")
+    .max(72, "Maximum 72 characters")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[0-9]/, "Must include a digit"),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: "Passwords don't match",
@@ -137,7 +141,12 @@ const Register = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    navigate("/profile", { replace: true });
+    return null;
+  }
 
   const form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -161,8 +170,9 @@ const Register = () => {
         phone: formData.phone || undefined,
         password: formData.password,
         tier: effectiveTier,
+        billingCycle: billingCycle === "annual" ? "yearly" : "monthly",
       });
-      login(res.data.token, {
+      login(res.data.token, res.data.refreshToken, {
         userId: res.data.userId,
         tenantId: res.data.tenantId,
         tenantSlug: res.data.tenantSlug,

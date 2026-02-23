@@ -4,6 +4,7 @@ import co.shyara.bitex.mainweb.common.ApiException
 import com.razorpay.RazorpayClient
 import jakarta.annotation.PostConstruct
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -17,6 +18,7 @@ class RazorpayService(
     @Value("\${app.razorpay.key-secret}") private val keySecret: String,
     @Value("\${app.razorpay.webhook-secret}") private val webhookSecret: String
 ) {
+    private val log = LoggerFactory.getLogger(RazorpayService::class.java)
 
     private lateinit var client: RazorpayClient
 
@@ -35,7 +37,7 @@ class RazorpayService(
     fun getPlanId(tier: Int, billingCycle: String): String {
         val key = "${tier}_$billingCycle"
         return planMap[key]
-            ?: throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_PLAN", "No plan found for tier $tier / $billingCycle")
+            ?: throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_PLAN", "Invalid plan selection")
     }
 
     fun createSubscription(planId: String, tenantEmail: String): String {
@@ -51,10 +53,11 @@ class RazorpayService(
             val subscription = client.subscriptions.create(request)
             return subscription.get<String>("id")
         } catch (e: Exception) {
+            log.error("Razorpay subscription creation failed", e)
             throw ApiException(
                 HttpStatus.BAD_GATEWAY,
-                "RAZORPAY_ERROR",
-                "Failed to create subscription: ${e.message}"
+                "PAYMENT_ERROR",
+                "Payment service unavailable. Please try again."
             )
         }
     }
@@ -63,10 +66,11 @@ class RazorpayService(
         try {
             client.subscriptions.cancel(subscriptionId, JSONObject().put("cancel_at_cycle_end", 1))
         } catch (e: Exception) {
+            log.error("Razorpay subscription cancellation failed", e)
             throw ApiException(
                 HttpStatus.BAD_GATEWAY,
-                "RAZORPAY_ERROR",
-                "Failed to cancel subscription: ${e.message}"
+                "PAYMENT_ERROR",
+                "Payment service unavailable. Please try again."
             )
         }
     }
@@ -80,6 +84,7 @@ class RazorpayService(
                 .joinToString("") { String.format("%02x", it) }
             MessageDigest.isEqual(computed.toByteArray(), signature.toByteArray())
         } catch (e: Exception) {
+            log.error("Webhook signature verification error", e)
             false
         }
     }

@@ -1,5 +1,8 @@
 package co.shyara.bitex.mainweb.tenant.dto
 
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.Size
+
 data class TenantSettingsResponse(
     val tenantId: String,
     val name: String,
@@ -19,15 +22,15 @@ data class TenantSettingsResponse(
 )
 
 data class UpdateTenantSettingsRequest(
-    val name: String? = null,
-    val businessType: String? = null,
-    val phone: String? = null,
-    val businessEmail: String? = null,
-    val website: String? = null,
-    val gstin: String? = null,
-    val address: String? = null,
-    val description: String? = null,
-    val paymentGateway: String? = null
+    @field:Size(max = 100) val name: String? = null,
+    @field:Size(max = 50) val businessType: String? = null,
+    @field:Size(max = 20) val phone: String? = null,
+    @field:Email @field:Size(max = 255) val businessEmail: String? = null,
+    @field:Size(max = 500) val website: String? = null,
+    @field:Size(max = 20) val gstin: String? = null,
+    @field:Size(max = 5000) val address: String? = null,
+    @field:Size(max = 5000) val description: String? = null,
+    @field:Size(max = 30) val paymentGateway: String? = null
 )
 
 data class BillingInfoResponse(
@@ -40,10 +43,10 @@ data class BillingInfoResponse(
 )
 
 data class UpdateBillingInfoRequest(
-    val businessName: String? = null,
-    val gstin: String? = null,
-    val address: String? = null,
-    val city: String? = null,
-    val state: String? = null,
-    val pincode: String? = null
+    @field:Size(max = 255) val businessName: String? = null,
+    @field:Size(max = 20) val gstin: String? = null,
+    @field:Size(max = 5000) val address: String? = null,
+    @field:Size(max = 100) val city: String? = null,
+    @field:Size(max = 100) val state: String? = null,
+    @field:Size(max = 10) val pincode: String? = null
 )

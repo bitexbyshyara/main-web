@@ -18,7 +18,7 @@ class UserController(private val userService: UserService) {
         ResponseEntity.ok(userService.getProfile(currentUserId()))
 
     @PutMapping("/profile")
-    fun updateProfile(@RequestBody request: UpdateProfileRequest): ResponseEntity<UserProfileResponse> =
+    fun updateProfile(@Valid @RequestBody request: UpdateProfileRequest): ResponseEntity<UserProfileResponse> =
         ResponseEntity.ok(userService.updateProfile(currentUserId(), request))
 
     @PutMapping("/password")
@@ -35,7 +35,7 @@ class UserController(private val userService: UserService) {
 
     @PutMapping("/notifications")
     fun updateNotificationPreferences(
-        @RequestBody request: UpdateNotificationPreferencesRequest
+        @Valid @RequestBody request: UpdateNotificationPreferencesRequest
     ): ResponseEntity<NotificationPreferencesResponse> =
         ResponseEntity.ok(userService.updateNotificationPreferences(currentUserId(), request))
 

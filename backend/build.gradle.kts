@@ -34,6 +34,9 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
+    // Rate limiting
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
     // Razorpay
     implementation("com.razorpay:razorpay-java:1.4.6")
 

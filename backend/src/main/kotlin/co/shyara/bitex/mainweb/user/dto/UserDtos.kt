@@ -18,14 +18,14 @@ data class UserProfileResponse(
 )
 
 data class UpdateProfileRequest(
-    val firstName: String? = null,
-    val lastName: String? = null,
-    val phone: String? = null
+    @field:Size(max = 100) val firstName: String? = null,
+    @field:Size(max = 100) val lastName: String? = null,
+    @field:Size(max = 20) val phone: String? = null
 )
 
 data class ChangePasswordRequest(
     @field:NotBlank val currentPassword: String,
-    @field:Size(min = 8, message = "Password must be at least 8 characters") @field:NotBlank val newPassword: String
+    @field:Size(min = 8, max = 72) @field:NotBlank val newPassword: String
 )
 
 data class NotificationPreferencesResponse(

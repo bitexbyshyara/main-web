@@ -1,6 +1,8 @@
 package co.shyara.bitex.mainweb.repository
 
 import co.shyara.bitex.mainweb.model.Invoice
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -8,6 +10,7 @@ import java.util.UUID
 @Repository
 interface InvoiceRepository : JpaRepository<Invoice, UUID> {
     fun findAllByTenantIdOrderByCreatedAtDesc(tenantId: UUID): List<Invoice>
+    fun findAllByTenantId(tenantId: UUID, pageable: Pageable): Page<Invoice>
     fun findByRazorpayInvoiceId(razorpayInvoiceId: String): Invoice?
     fun findByRazorpayPaymentId(razorpayPaymentId: String): Invoice?
     fun countByTenantId(tenantId: UUID): Long

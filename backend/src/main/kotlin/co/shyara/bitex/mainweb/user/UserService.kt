@@ -2,11 +2,15 @@ package co.shyara.bitex.mainweb.user
 
 import co.shyara.bitex.mainweb.auth.dto.MessageResponse
 import co.shyara.bitex.mainweb.common.ApiException
+import co.shyara.bitex.mainweb.common.FileUploadUtil
+import co.shyara.bitex.mainweb.common.PasswordValidator
 import co.shyara.bitex.mainweb.model.NotificationPreferences
 import co.shyara.bitex.mainweb.repository.NotificationPreferencesRepository
+import co.shyara.bitex.mainweb.repository.RefreshTokenRepository
 import co.shyara.bitex.mainweb.repository.TenantRepository
 import co.shyara.bitex.mainweb.repository.UserRepository
 import co.shyara.bitex.mainweb.user.dto.*
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -24,14 +28,11 @@ class UserService(
     private val userRepository: UserRepository,
     private val tenantRepository: TenantRepository,
     private val notificationPreferencesRepository: NotificationPreferencesRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
     private val passwordEncoder: PasswordEncoder,
     @Value("\${app.upload.dir:uploads}") private val uploadDir: String
 ) {
-
-    companion object {
-        private val ALLOWED_IMAGE_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
-        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
-    }
+    private val log = LoggerFactory.getLogger(UserService::class.java)
 
     @Transactional(readOnly = true)
     fun getProfile(userId: UUID): UserProfileResponse {
@@ -79,16 +80,21 @@ class UserService(
             throw ApiException(HttpStatus.BAD_REQUEST, "BAD_PASSWORD", "Current password is incorrect")
         }
 
+        PasswordValidator.validate(request.newPassword, user.email)
+
         user.passwordHash = passwordEncoder.encode(request.newPassword)
         user.updatedAt = Instant.now()
         userRepository.save(user)
+
+        refreshTokenRepository.revokeAllByUserId(userId)
+        log.info("SECURITY: Password changed for userId={}, all refresh tokens revoked", userId)
 
         return MessageResponse("Password updated successfully")
     }
 
     @Transactional
     fun uploadAvatar(userId: UUID, file: MultipartFile): UserProfileResponse {
-        validateImageFile(file)
+        FileUploadUtil.validateImageFile(file)
 
         val user = userRepository.findById(userId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found") }
@@ -96,8 +102,10 @@ class UserService(
         val dir = Paths.get(uploadDir, "avatars")
         Files.createDirectories(dir)
 
-        val extension = resolveExtension(file)
-        val filename = "${userId}_${System.currentTimeMillis()}.$extension"
+        deleteOldFile(user.avatarUrl)
+
+        val extension = FileUploadUtil.resolveExtension(file)
+        val filename = "${UUID.randomUUID()}.$extension"
         val filePath = dir.resolve(filename)
 
         Files.copy(file.inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
@@ -105,6 +113,8 @@ class UserService(
         user.avatarUrl = "/uploads/avatars/$filename"
         user.updatedAt = Instant.now()
         userRepository.save(user)
+
+        log.info("SECURITY: Avatar uploaded for userId={}, fileSize={}", userId, file.size)
 
         return getProfile(userId)
     }
@@ -146,21 +156,14 @@ class UserService(
         return getNotificationPreferences(userId)
     }
 
-    private fun validateImageFile(file: MultipartFile) {
-        if (file.isEmpty) {
-            throw ApiException(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "File is empty")
+    private fun deleteOldFile(url: String?) {
+        if (url.isNullOrBlank()) return
+        try {
+            val relativePath = url.removePrefix("/uploads/")
+            val oldFile = Paths.get(uploadDir, relativePath)
+            Files.deleteIfExists(oldFile)
+        } catch (e: Exception) {
+            log.warn("Failed to delete old file: {}", url, e)
         }
-        val contentType = file.contentType
-        if (contentType == null || contentType !in ALLOWED_IMAGE_TYPES) {
-            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "Only JPEG, PNG, GIF, and WebP images are allowed")
-        }
-    }
-
-    private fun resolveExtension(file: MultipartFile): String {
-        val fromName = file.originalFilename
-            ?.substringAfterLast('.', "")
-            ?.lowercase()
-            ?.takeIf { it.isNotEmpty() && it in ALLOWED_EXTENSIONS }
-        return fromName ?: "png"
     }
 }

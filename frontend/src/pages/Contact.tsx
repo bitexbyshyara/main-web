@@ -41,18 +41,18 @@ const channels = [
   {
     icon: MessageSquare,
     label: "WhatsApp",
-    value: "+91 98765 43210",
+    value: "+91 95846 61610",
     description: "Chat with us in real-time",
     action: "Open WhatsApp",
-    href: "https://wa.me/919876543210",
+    href: "https://wa.me/919584661610",
   },
   {
     icon: Phone,
     label: "Phone",
-    value: "+91 98765 43210",
+    value: "+91 95846 61610",
     description: "Call us Mon-Fri, 9 AM - 6 PM IST",
     action: "Call Now",
-    href: "tel:+919876543210",
+    href: "tel:+919584661610",
   },
 ];
 
@@ -178,7 +178,7 @@ const Contact = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="+91 98765 43210" {...form.register("phone")} className="mt-1.5" />
+                  <Input id="phone" placeholder="+91 95846 61610" {...form.register("phone")} className="mt-1.5" />
                 </div>
                 <div>
                   <Label htmlFor="restaurant">Restaurant Name</Label>

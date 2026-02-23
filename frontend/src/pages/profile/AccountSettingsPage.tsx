@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import {
   Building2, User, Shield, Bell, Camera, Phone, Mail,
-  Globe, Key, Eye, EyeOff, AlertTriangle, ChevronDown, Trash2, Loader2,
+  Globe, Key, Eye, EyeOff, AlertTriangle, ChevronDown, Loader2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,10 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -437,6 +433,14 @@ function SecurityTab() {
 
   const handlePasswordUpdate = () => {
     if (!currentPw || !newPw) return;
+    if (newPw.length > 72) {
+      toast({ title: "Password too long", description: "Maximum 72 characters allowed.", variant: "destructive" });
+      return;
+    }
+    if (!/[A-Z]/.test(newPw) || !/[a-z]/.test(newPw) || !/[0-9]/.test(newPw)) {
+      toast({ title: "Weak password", description: "Must include uppercase, lowercase, and a digit.", variant: "destructive" });
+      return;
+    }
     if (newPw !== confirmPw) {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
@@ -537,18 +541,16 @@ function SecurityTab() {
 
       {/* Two-Factor Authentication */}
       <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-        <h3 className="font-heading font-semibold text-foreground">Two-Factor Authentication</h3>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h3 className="font-heading font-semibold text-foreground">Two-Factor Authentication</h3>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">Coming Soon</span>
+        </div>
+        <div className="flex items-center justify-between opacity-50">
           <div>
             <p className="text-sm font-medium text-foreground">SMS Verification</p>
-            <p className="text-xs text-muted-foreground">Receive a code via SMS when signing in</p>
+            <p className="text-xs text-muted-foreground">Receive a code via SMS when signing in. This feature is under development.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-semibold ${profile?.twoFaEnabled ? "text-success" : "text-muted-foreground"}`}>
-              {profile?.twoFaEnabled ? "Enabled" : "Disabled"}
-            </span>
-            <Switch checked={profile?.twoFaEnabled ?? false} disabled />
-          </div>
+          <Switch checked={false} disabled />
         </div>
       </div>
 
@@ -566,32 +568,13 @@ function SecurityTab() {
         <CollapsibleContent>
           <div className="border border-t-0 border-destructive/20 rounded-b-xl px-6 py-4 space-y-3 -mt-2">
             <p className="text-sm text-muted-foreground">
-              Permanently delete your account and all associated data. This action cannot be undone.
+              To permanently delete your account and all associated data, please contact our support team. This action cannot be undone.
             </p>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4 mr-1.5" /> Delete Account
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete your account and all data. This cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={() => toast({ title: "Deletion request submitted" })}
-                  >
-                    Delete Account
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button asChild variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10">
+              <a href="mailto:support@shyara.co.in?subject=Account%20Deletion%20Request">
+                <Mail className="h-4 w-4 mr-1.5" /> Contact Support to Delete Account
+              </a>
+            </Button>
           </div>
         </CollapsibleContent>
       </Collapsible>

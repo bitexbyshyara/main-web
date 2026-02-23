@@ -2,12 +2,13 @@ package co.shyara.bitex.mainweb.support.dto
 
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 
 data class CreateTicketRequest(
-    @field:NotBlank val subject: String,
-    @field:NotBlank val category: String,
-    val priority: String = "medium",
-    @field:NotBlank val description: String
+    @field:NotBlank @field:Size(max = 255) val subject: String,
+    @field:NotBlank @field:Size(max = 30) val category: String,
+    @field:Size(max = 20) val priority: String = "medium",
+    @field:NotBlank @field:Size(max = 5000) val description: String
 )
 
 data class TicketResponse(
@@ -22,12 +23,12 @@ data class TicketResponse(
 )
 
 data class ContactRequest(
-    @field:NotBlank val name: String,
-    @field:Email @field:NotBlank val email: String,
-    val phone: String? = null,
-    val restaurant: String? = null,
-    @field:NotBlank val subject: String,
-    @field:NotBlank val message: String
+    @field:NotBlank @field:Size(max = 100) val name: String,
+    @field:Email @field:NotBlank @field:Size(max = 255) val email: String,
+    @field:Size(max = 20) val phone: String? = null,
+    @field:Size(max = 100) val restaurant: String? = null,
+    @field:NotBlank @field:Size(max = 255) val subject: String,
+    @field:NotBlank @field:Size(max = 5000) val message: String
 )
 
 data class ContactResponse(

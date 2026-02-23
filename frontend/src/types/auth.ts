@@ -5,6 +5,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
   userId: string;
   tenantId: string;
   tenantSlug: string;
@@ -18,15 +19,22 @@ export interface RegisterRequest {
   phone?: string;
   password: string;
   tier?: number;
+  billingCycle?: "monthly" | "yearly";
 }
 
 export interface RegisterResponse {
   token: string;
+  refreshToken: string;
   userId: string;
   tenantId: string;
   tenantSlug: string;
-  role: string;
+  role: 'STAFF' | 'MANAGER';
   email: string;
+}
+
+export interface RefreshResponse {
+  token: string;
+  refreshToken: string;
 }
 
 export interface ErrorResponse {

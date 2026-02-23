@@ -12,12 +12,19 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(private val jwtService: JwtService) : OncePerRequestFilter() {
 
-    private val publicPrefixes = listOf("/api/auth/")
-    private val publicExactPaths = setOf("/api/contact", "/api/billing/webhook")
+    private val publicExactPaths = setOf(
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/refresh",
+        "/api/auth/forgot-password",
+        "/api/auth/reset-password",
+        "/api/contact",
+        "/api/billing/webhook"
+    )
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.servletPath
-        return publicPrefixes.any { path.startsWith(it) } || path in publicExactPaths
+        return path in publicExactPaths
     }
 
     override fun doFilterInternal(
@@ -44,7 +51,6 @@ class JwtAuthFilter(private val jwtService: JwtService) : OncePerRequestFilter()
                 )
 
                 val authorities = listOf(SimpleGrantedAuthority("ROLE_$role"))
-
                 val authentication = UsernamePasswordAuthenticationToken(principal, null, authorities)
                 SecurityContextHolder.getContext().authentication = authentication
             }

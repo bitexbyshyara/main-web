@@ -31,10 +31,11 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ErrorResponse> {
+        log.warn("Illegal argument: {}", ex.message)
         return ResponseEntity.badRequest().body(
             ErrorResponse(
                 error = "BAD_REQUEST",
-                message = ex.message ?: "Invalid argument"
+                message = "Invalid request"
             )
         )
     }
@@ -44,7 +45,7 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
             ErrorResponse(
                 error = "FORBIDDEN",
-                message = ex.message ?: "Access denied"
+                message = "Access denied"
             )
         )
     }
@@ -54,7 +55,7 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
             ErrorResponse(
                 error = "NOT_FOUND",
-                message = ex.message ?: "Resource not found"
+                message = "Resource not found"
             )
         )
     }
@@ -81,7 +82,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException::class)
     fun handleDataIntegrity(ex: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
-        log.warn("Data integrity violation: {}", ex.message)
+        log.warn("Data integrity violation occurred")
         val message = when {
             ex.message?.contains("users_email_key", ignoreCase = true) == true -> "Email already registered"
             ex.message?.contains("tenants_slug_key", ignoreCase = true) == true -> "Please try again"

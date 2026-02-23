@@ -36,7 +36,7 @@ const Footer = () => (
           </p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary shrink-0" /> support@shyara.co.in</p>
-            <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary shrink-0" /> +91 98765 43210</p>
+            <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary shrink-0" /> +91 95846 61610</p>
             <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary shrink-0" /> Patna, India</p>
           </div>
         </div>
