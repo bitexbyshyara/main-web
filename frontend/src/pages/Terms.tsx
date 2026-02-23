@@ -26,7 +26,7 @@ const Terms = () => (
         <p className="text-muted-foreground">BiteX is provided "as is". We're not responsible for indirect damages from using the service.</p>
 
         <h2 className="font-heading">7. Legal</h2>
-        <p className="text-muted-foreground">These terms follow Indian law. Disputes are handled in Gujarat, India.</p>
+        <p className="text-muted-foreground">These terms follow Indian law. Disputes are handled in Patna, India.</p>
 
         <h2 className="font-heading">8. Contact</h2>
         <p className="text-muted-foreground">Questions? Email support@shyara.co.in.</p>
