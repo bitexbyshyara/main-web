@@ -28,6 +28,12 @@ class UserService(
     @Value("\${app.upload.dir:uploads}") private val uploadDir: String
 ) {
 
+    companion object {
+        private val ALLOWED_IMAGE_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
+        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
+    }
+
+    @Transactional(readOnly = true)
     fun getProfile(userId: UUID): UserProfileResponse {
         val user = userRepository.findById(userId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found") }
@@ -64,6 +70,7 @@ class UserService(
         return getProfile(userId)
     }
 
+    @Transactional
     fun changePassword(userId: UUID, request: ChangePasswordRequest): MessageResponse {
         val user = userRepository.findById(userId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found") }
@@ -81,13 +88,15 @@ class UserService(
 
     @Transactional
     fun uploadAvatar(userId: UUID, file: MultipartFile): UserProfileResponse {
+        validateImageFile(file)
+
         val user = userRepository.findById(userId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found") }
 
         val dir = Paths.get(uploadDir, "avatars")
         Files.createDirectories(dir)
 
-        val extension = file.originalFilename?.substringAfterLast('.', "") ?: "png"
+        val extension = resolveExtension(file)
         val filename = "${userId}_${System.currentTimeMillis()}.$extension"
         val filePath = dir.resolve(filename)
 
@@ -100,6 +109,7 @@ class UserService(
         return getProfile(userId)
     }
 
+    @Transactional(readOnly = true)
     fun getNotificationPreferences(userId: UUID): NotificationPreferencesResponse {
         val prefs = notificationPreferencesRepository.findByUserId(userId)
 
@@ -134,5 +144,23 @@ class UserService(
         notificationPreferencesRepository.save(prefs)
 
         return getNotificationPreferences(userId)
+    }
+
+    private fun validateImageFile(file: MultipartFile) {
+        if (file.isEmpty) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "File is empty")
+        }
+        val contentType = file.contentType
+        if (contentType == null || contentType !in ALLOWED_IMAGE_TYPES) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "Only JPEG, PNG, GIF, and WebP images are allowed")
+        }
+    }
+
+    private fun resolveExtension(file: MultipartFile): String {
+        val fromName = file.originalFilename
+            ?.substringAfterLast('.', "")
+            ?.lowercase()
+            ?.takeIf { it.isNotEmpty() && it in ALLOWED_EXTENSIONS }
+        return fromName ?: "png"
     }
 }

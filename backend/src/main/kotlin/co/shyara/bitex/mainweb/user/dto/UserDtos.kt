@@ -1,5 +1,8 @@
 package co.shyara.bitex.mainweb.user.dto
 
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
+
 data class UserProfileResponse(
     val id: String,
     val email: String,
@@ -21,8 +24,8 @@ data class UpdateProfileRequest(
 )
 
 data class ChangePasswordRequest(
-    val currentPassword: String,
-    val newPassword: String
+    @field:NotBlank val currentPassword: String,
+    @field:Size(min = 8, message = "Password must be at least 8 characters") @field:NotBlank val newPassword: String
 )
 
 data class NotificationPreferencesResponse(

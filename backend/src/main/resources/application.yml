@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://dpg-d6dufvnfte5s73dliod0-a.oregon-postgres.render.com:5432/main_web_db_9nj2}
-    username: ${DATABASE_USERNAME:main_web_db_9nj2_user}
-    password: ${DATABASE_PASSWORD:T9aLK0TCIhyoBpijJRkH28HmWItnnAiE}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/bitex_main_web}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

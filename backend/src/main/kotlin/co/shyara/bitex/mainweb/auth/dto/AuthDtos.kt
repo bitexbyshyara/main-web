@@ -22,7 +22,8 @@ data class AuthResponse(
     val userId: String,
     val tenantId: String,
     val tenantSlug: String,
-    val role: String
+    val role: String,
+    val email: String
 )
 
 data class ForgotPasswordRequest(

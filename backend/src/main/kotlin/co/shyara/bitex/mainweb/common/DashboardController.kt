@@ -14,7 +14,7 @@ data class DashboardResponse(
     val tier: Int,
     val billingCycle: String,
     val onboardingComplete: Boolean,
-    val supportTicketCount: Int,
+    val supportTicketCount: Long,
     val latestInvoice: LatestInvoiceInfo?
 )
 
@@ -53,10 +53,9 @@ class DashboardController(
                 && !settings.phone.isNullOrBlank()
                 && !settings.businessEmail.isNullOrBlank()
 
-        val tickets = supportTicketRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
+        val ticketCount = supportTicketRepository.countByTenantId(tenantId)
 
-        val invoices = invoiceRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId)
-        val latestInvoice = invoices.firstOrNull()?.let { inv ->
+        val latestInvoice = invoiceRepository.findFirstByTenantIdOrderByCreatedAtDesc(tenantId)?.let { inv ->
             LatestInvoiceInfo(
                 id = inv.id.toString(),
                 amount = inv.amount,
@@ -72,7 +71,7 @@ class DashboardController(
                 tier = tenant.tier,
                 billingCycle = tenant.billingCycle,
                 onboardingComplete = onboardingComplete,
-                supportTicketCount = tickets.size,
+                supportTicketCount = ticketCount,
                 latestInvoice = latestInvoice
             )
         )

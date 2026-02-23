@@ -5,7 +5,6 @@ import co.shyara.bitex.mainweb.billing.dto.*
 import co.shyara.bitex.mainweb.common.ApiException
 import co.shyara.bitex.mainweb.model.Invoice
 import co.shyara.bitex.mainweb.model.PaymentMethod
-import co.shyara.bitex.mainweb.model.Subscription
 import co.shyara.bitex.mainweb.repository.*
 import org.json.JSONObject
 import org.springframework.http.HttpStatus
@@ -20,9 +19,11 @@ class BillingService(
     private val invoiceRepository: InvoiceRepository,
     private val paymentMethodRepository: PaymentMethodRepository,
     private val tenantRepository: TenantRepository,
+    private val userRepository: UserRepository,
     private val razorpayService: RazorpayService
 ) {
 
+    @Transactional(readOnly = true)
     fun getSubscription(tenantId: UUID): SubscriptionResponse {
         val subscription = subscriptionRepository.findByTenantId(tenantId)
             ?: throw ApiException(HttpStatus.NOT_FOUND, "SUBSCRIPTION_NOT_FOUND", "No subscription found")
@@ -55,7 +56,8 @@ class BillingService(
         }
 
         val newPlanId = razorpayService.getPlanId(request.tier, request.billingCycle)
-        val ownerEmail = tenant.name
+        val ownerUser = userRepository.findAllByTenantId(tenantId).firstOrNull()
+        val ownerEmail = ownerUser?.email ?: tenant.name
         val razorpaySubId = razorpayService.createSubscription(newPlanId, ownerEmail)
 
         subscription.razorpaySubscriptionId = razorpaySubId
@@ -94,9 +96,17 @@ class BillingService(
         subscription.updatedAt = Instant.now()
         subscriptionRepository.save(subscription)
 
+        val tenant = tenantRepository.findById(tenantId).orElse(null)
+        if (tenant != null) {
+            tenant.status = "CANCELLED"
+            tenant.updatedAt = Instant.now()
+            tenantRepository.save(tenant)
+        }
+
         return MessageResponse("Subscription cancelled successfully.")
     }
 
+    @Transactional(readOnly = true)
     fun getInvoices(tenantId: UUID): List<InvoiceResponse> {
         return invoiceRepository.findAllByTenantIdOrderByCreatedAtDesc(tenantId).map { inv ->
             InvoiceResponse(
@@ -111,6 +121,7 @@ class BillingService(
         }
     }
 
+    @Transactional(readOnly = true)
     fun getPaymentMethods(tenantId: UUID): List<PaymentMethodResponse> {
         return paymentMethodRepository.findAllByTenantId(tenantId).map { pm ->
             PaymentMethodResponse(
@@ -152,7 +163,16 @@ class BillingService(
             throw ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "You do not own this payment method")
         }
 
+        val wasDefault = pm.isDefault
         paymentMethodRepository.delete(pm)
+
+        if (wasDefault) {
+            val remaining = paymentMethodRepository.findAllByTenantId(tenantId)
+            if (remaining.isNotEmpty()) {
+                remaining.first().isDefault = true
+                paymentMethodRepository.save(remaining.first())
+            }
+        }
     }
 
     @Transactional
@@ -175,6 +195,13 @@ class BillingService(
                 subscription.currentPeriodEnd = Instant.ofEpochSecond(subData.getLong("current_end"))
                 subscription.updatedAt = Instant.now()
                 subscriptionRepository.save(subscription)
+
+                val tenant = tenantRepository.findById(subscription.tenantId!!).orElse(null)
+                if (tenant != null) {
+                    tenant.status = "ACTIVE"
+                    tenant.updatedAt = Instant.now()
+                    tenantRepository.save(tenant)
+                }
             }
             "subscription.charged" -> {
                 val subData = payloadEntity.getJSONObject("subscription").getJSONObject("entity")
@@ -206,7 +233,7 @@ class BillingService(
             "payment.captured" -> {
                 val paymentData = payloadEntity.getJSONObject("payment").getJSONObject("entity")
                 val razorpayPaymentId = paymentData.getString("id")
-                val existing = invoiceRepository.findByRazorpayInvoiceId(razorpayPaymentId)
+                val existing = invoiceRepository.findByRazorpayPaymentId(razorpayPaymentId)
                 if (existing != null) {
                     existing.status = "PAID"
                     invoiceRepository.save(existing)

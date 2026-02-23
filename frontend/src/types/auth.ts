@@ -9,6 +9,7 @@ export interface LoginResponse {
   tenantId: string;
   tenantSlug: string;
   role: 'STAFF' | 'MANAGER';
+  email: string;
 }
 
 export interface RegisterRequest {
@@ -25,6 +26,7 @@ export interface RegisterResponse {
   tenantId: string;
   tenantSlug: string;
   role: string;
+  email: string;
 }
 
 export interface ErrorResponse {

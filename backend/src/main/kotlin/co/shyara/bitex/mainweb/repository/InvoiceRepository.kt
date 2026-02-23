@@ -9,4 +9,7 @@ import java.util.UUID
 interface InvoiceRepository : JpaRepository<Invoice, UUID> {
     fun findAllByTenantIdOrderByCreatedAtDesc(tenantId: UUID): List<Invoice>
     fun findByRazorpayInvoiceId(razorpayInvoiceId: String): Invoice?
+    fun findByRazorpayPaymentId(razorpayPaymentId: String): Invoice?
+    fun countByTenantId(tenantId: UUID): Long
+    fun findFirstByTenantIdOrderByCreatedAtDesc(tenantId: UUID): Invoice?
 }

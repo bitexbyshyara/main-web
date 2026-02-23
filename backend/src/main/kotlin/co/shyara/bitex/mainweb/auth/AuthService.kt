@@ -30,7 +30,7 @@ class AuthService(
         }
 
         val slug = generateUniqueSlug(request.restaurantName)
-        val tier = minOf(request.tier, 2)
+        val tier = request.tier.coerceIn(1, 2)
 
         val tenant = tenantRepository.save(
             Tenant(
@@ -64,7 +64,8 @@ class AuthService(
             userId = user.id.toString(),
             tenantId = tenant.id.toString(),
             tenantSlug = tenant.slug,
-            role = user.role
+            role = user.role,
+            email = user.email
         )
     }
 
@@ -86,7 +87,8 @@ class AuthService(
             userId = user.id.toString(),
             tenantId = tenant.id.toString(),
             tenantSlug = tenant.slug,
-            role = user.role
+            role = user.role,
+            email = user.email
         )
     }
 

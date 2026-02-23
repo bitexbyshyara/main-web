@@ -15,6 +15,7 @@ import PaymentInfo from "./pages/PaymentInfo";
 import RefundPolicy from "./pages/RefundPolicy";
 import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 import ProfileLayout from "./components/profile/ProfileLayout";
 import ProfileDashboard from "./pages/profile/ProfileDashboard";
 import BillingPage from "./pages/profile/BillingPage";
@@ -44,14 +45,16 @@ const App = () => (
             <Route path="/payment-info" element={<PaymentInfo />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
 
-            {/* Profile portal routes */}
-            <Route path="/profile" element={<ProfileLayout />}>
-              <Route index element={<Navigate to="/profile/dashboard" replace />} />
-              <Route path="dashboard" element={<ProfileDashboard />} />
-              <Route path="billing" element={<BillingPage />} />
-              <Route path="settings" element={<AccountSettingsPage />} />
-              <Route path="how-to-use" element={<HowToUsePage />} />
-              <Route path="support" element={<ContactSupportPage />} />
+            {/* Profile portal routes — requires authentication */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfileLayout />}>
+                <Route index element={<Navigate to="/profile/dashboard" replace />} />
+                <Route path="dashboard" element={<ProfileDashboard />} />
+                <Route path="billing" element={<BillingPage />} />
+                <Route path="settings" element={<AccountSettingsPage />} />
+                <Route path="how-to-use" element={<HowToUsePage />} />
+                <Route path="support" element={<ContactSupportPage />} />
+              </Route>
             </Route>
 
             <Route path="*" element={<NotFound />} />

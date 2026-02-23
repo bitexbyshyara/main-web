@@ -40,7 +40,7 @@ const Login = () => {
         tenantId: res.data.tenantId,
         tenantSlug: res.data.tenantSlug,
         role: res.data.role,
-        email: data.identifier,
+        email: res.data.email,
       });
 
       navigate("/profile");

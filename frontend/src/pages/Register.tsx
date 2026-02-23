@@ -167,7 +167,7 @@ const Register = () => {
         tenantId: res.data.tenantId,
         tenantSlug: res.data.tenantSlug,
         role: res.data.role,
-        email: formData.email,
+        email: res.data.email,
       });
       toast({ title: "Welcome to BiteX!", description: "Your restaurant has been registered." });
       navigate("/profile?welcome=true");

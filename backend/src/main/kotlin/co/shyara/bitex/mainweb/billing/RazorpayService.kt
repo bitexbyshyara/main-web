@@ -7,6 +7,7 @@ import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -77,7 +78,7 @@ class RazorpayService(
             mac.init(SecretKeySpec(webhookSecret.toByteArray(), "HmacSHA256"))
             val computed = mac.doFinal(payload.toByteArray())
                 .joinToString("") { String.format("%02x", it) }
-            computed == signature
+            MessageDigest.isEqual(computed.toByteArray(), signature.toByteArray())
         } catch (e: Exception) {
             false
         }

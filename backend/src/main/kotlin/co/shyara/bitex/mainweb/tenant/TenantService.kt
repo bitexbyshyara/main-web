@@ -26,6 +26,12 @@ class TenantService(
     @Value("\${app.upload.dir:uploads}") private val uploadDir: String
 ) {
 
+    companion object {
+        private val ALLOWED_IMAGE_TYPES = setOf("image/jpeg", "image/png", "image/gif", "image/webp")
+        private val ALLOWED_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
+    }
+
+    @Transactional(readOnly = true)
     fun getSettings(tenantId: UUID): TenantSettingsResponse {
         val tenant = tenantRepository.findById(tenantId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
@@ -78,6 +84,7 @@ class TenantService(
         return getSettings(tenantId)
     }
 
+    @Transactional(readOnly = true)
     fun getBillingInfo(tenantId: UUID): BillingInfoResponse {
         val billing = billingInfoRepository.findByTenantId(tenantId)
 
@@ -113,13 +120,15 @@ class TenantService(
 
     @Transactional
     fun uploadLogo(tenantId: UUID, file: MultipartFile): TenantSettingsResponse {
+        validateImageFile(file)
+
         val tenant = tenantRepository.findById(tenantId)
             .orElseThrow { ApiException(HttpStatus.NOT_FOUND, "TENANT_NOT_FOUND", "Tenant not found") }
 
         val dir = Paths.get(uploadDir, "logos")
         Files.createDirectories(dir)
 
-        val extension = file.originalFilename?.substringAfterLast('.', "") ?: "png"
+        val extension = resolveExtension(file)
         val filename = "${tenantId}_${System.currentTimeMillis()}.$extension"
         val filePath = dir.resolve(filename)
 
@@ -132,5 +141,23 @@ class TenantService(
         tenantSettingsRepository.save(settings)
 
         return getSettings(tenantId)
+    }
+
+    private fun validateImageFile(file: MultipartFile) {
+        if (file.isEmpty) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "File is empty")
+        }
+        val contentType = file.contentType
+        if (contentType == null || contentType !in ALLOWED_IMAGE_TYPES) {
+            throw ApiException(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "Only JPEG, PNG, GIF, and WebP images are allowed")
+        }
+    }
+
+    private fun resolveExtension(file: MultipartFile): String {
+        val fromName = file.originalFilename
+            ?.substringAfterLast('.', "")
+            ?.lowercase()
+            ?.takeIf { it.isNotEmpty() && it in ALLOWED_EXTENSIONS }
+        return fromName ?: "png"
     }
 }

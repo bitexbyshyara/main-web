@@ -2,7 +2,6 @@ package co.shyara.bitex.mainweb.config
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -23,13 +22,13 @@ class JwtService(
         val expiry = Date(now.time + expirationMs)
 
         return Jwts.builder()
-            .setSubject(userId.toString())
+            .subject(userId.toString())
             .claim("tenantId", tenantId.toString())
             .claim("role", role)
             .claim("tenantSlug", tenantSlug)
-            .setIssuedAt(now)
-            .setExpiration(expiry)
-            .signWith(signingKey, SignatureAlgorithm.HS256)
+            .issuedAt(now)
+            .expiration(expiry)
+            .signWith(signingKey)
             .compact()
     }
 
@@ -54,9 +53,9 @@ class JwtService(
         getClaims(token)["tenantSlug"] as String
 
     fun getClaims(token: String): Claims =
-        Jwts.parserBuilder()
-            .setSigningKey(signingKey)
+        Jwts.parser()
+            .verifyWith(signingKey)
             .build()
-            .parseClaimsJws(token)
-            .body
+            .parseSignedClaims(token)
+            .payload
 }

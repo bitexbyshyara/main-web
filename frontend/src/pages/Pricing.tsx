@@ -4,91 +4,38 @@ import { motion } from "framer-motion";
 import { Check, X as XIcon, ArrowRight, HelpCircle, Star, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MarketingLayout from "@/components/MarketingLayout";
-import { FAQS } from "@/lib/constants";
+import { TIERS, FAQS } from "@/lib/constants";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
-const plans = [
-  {
-    name: "Starter",
-    subtitle: "Perfect for small restaurants",
-    price: 999,
-    yearlyPrice: 849,
-    popular: false,
-    cta: "Get Started",
-    ctaLink: "/register?tier=1",
-    features: [
-      "QR Code Generation (Up to 20 tables)",
-      "Digital Menu Rendering",
-      "Group Ordering Collaboration",
-      "Basic Order Management",
-      "Bill Splitting",
-      "Gaming Games (3 games)",
-      "Analytics (Basic)",
-      "Support (Email)",
-      "Staff Accounts (1)",
-      "Cloud Storage (5GB)",
-    ],
-  },
-  {
-    name: "Professional",
-    subtitle: "Most popular for growing restaurants",
-    price: 1999,
-    yearlyPrice: 1699,
-    popular: true,
-    cta: "Get Started",
-    ctaLink: "/register?tier=2",
-    features: [
-      "QR Code Generation (Unlimited)",
-      "Digital Menu Rendering",
-      "Group Ordering (Unlimited)",
-      "Advanced Order Management",
-      "Bill Splitting",
-      "Gaming Games (10+ games)",
-      "Analytics (Advanced)",
-      "Support (WhatsApp Priority)",
-      "Staff Accounts (5)",
-      "Cloud Storage (50GB)",
-    ],
-  },
-  {
-    name: "Enterprise",
-    subtitle: "For multi-location businesses",
-    price: null,
-    yearlyPrice: null,
-    popular: false,
-    cta: "Contact Sales",
-    ctaLink: "/contact",
-    features: [
-      "Everything in Professional",
-      "Unlimited Locations",
-      "Unlimited Staff Accounts",
-      "Enterprise Analytics",
-      "Dedicated Account Manager",
-      "Custom API Access",
-      "White-label Solution",
-      "24/7 Priority Support",
-      "Custom Integrations",
-      "QR Code Generation (Unlimited)",
-    ],
-  },
-];
+const plans = TIERS.map((tier) => ({
+  name: tier.name,
+  subtitle: tier.description,
+  price: tier.price,
+  yearlyPrice: tier.annualPrice,
+  popular: tier.id === 2,
+  cta: tier.cta,
+  ctaLink: tier.ctaLink,
+  features: tier.features.filter((f) => f.included).map((f) => f.text),
+  comingSoon: tier.id > 2,
+}));
 
 const comparisonRows = [
-  { feature: "QR Code Generation", starter: "20", pro: "Unlimited", enterprise: "Unlimited" },
-  { feature: "Staff Accounts", starter: "1", pro: "5", enterprise: "Unlimited" },
-  { feature: "Gaming Games", starter: "3", pro: "10+", enterprise: "30+" },
-  { feature: "Gaming Leaderboard", starter: false, pro: true, enterprise: true },
-  { feature: "Analytics Dashboard", starter: "Basic", pro: "Advanced", enterprise: "Enterprise" },
-  { feature: "Table-Level Analytics", starter: false, pro: true, enterprise: true },
-  { feature: "Multi-Location", starter: false, pro: false, enterprise: true },
-  { feature: "Dedicated Support", starter: false, pro: false, enterprise: true },
-  { feature: "Custom Integrations", starter: false, pro: false, enterprise: true },
-  { feature: "White-Label", starter: false, pro: false, enterprise: true },
-  { feature: "API Access", starter: false, pro: false, enterprise: true },
+  { feature: "QR Code Menu", values: [true, true, true, true] },
+  { feature: "Table Management", values: [true, true, true, true] },
+  { feature: "Live Ordering", values: [false, true, true, true] },
+  { feature: "Kitchen Display", values: [false, true, true, true] },
+  { feature: "Table Games", values: [false, false, true, true] },
+  { feature: "Online Payments", values: [false, false, true, true] },
+  { feature: "WhatsApp Bills", values: [false, false, true, true] },
+  { feature: "Custom Branding", values: [false, false, true, true] },
+  { feature: "Advanced Analytics", values: [false, false, false, true] },
+  { feature: "Multi-Location", values: [false, false, false, true] },
+  { feature: "AI Suggestions", values: [false, false, false, true] },
+  { feature: "Priority Support", values: [false, false, true, true] },
 ];
 
 const Pricing = () => {
@@ -157,7 +104,7 @@ const Pricing = () => {
       {/* Pricing Cards */}
       <section className="pb-24 -mt-4">
         <div className="container">
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {plans.map((plan, i) => (
               <motion.div
                 key={plan.name}
@@ -184,33 +131,35 @@ const Pricing = () => {
                 <p className="text-sm text-muted-foreground mt-1">{plan.subtitle}</p>
 
                 <div className="mt-5 mb-5">
-                  {plan.price !== null ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-sm text-muted-foreground">₹</span>
-                      <span className="text-4xl font-heading font-bold text-foreground">
-                        {(annual ? plan.yearlyPrice! : plan.price).toLocaleString("en-IN")}
-                      </span>
-                      <span className="text-sm text-muted-foreground">/month</span>
-                    </div>
-                  ) : (
-                    <span className="text-4xl font-heading font-bold text-foreground">Custom</span>
-                  )}
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm text-muted-foreground">₹</span>
+                    <span className="text-4xl font-heading font-bold text-foreground">
+                      {(annual ? plan.yearlyPrice : plan.price).toLocaleString("en-IN")}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </div>
                 </div>
 
-                <Button
-                  asChild
-                  className={`w-full rounded-full font-semibold group ${
-                    plan.popular
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : ""
-                  }`}
-                  variant={plan.popular ? "default" : "outline"}
-                >
-                  <Link to={plan.ctaLink}>
-                    {plan.cta}
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Button>
+                {plan.comingSoon ? (
+                  <Button disabled className="w-full rounded-full font-semibold" variant="outline">
+                    Coming Soon
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    className={`w-full rounded-full font-semibold group ${
+                      plan.popular
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : ""
+                    }`}
+                    variant={plan.popular ? "default" : "outline"}
+                  >
+                    <Link to={plan.ctaLink}>
+                      {plan.cta}
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </Button>
+                )}
 
                 <ul className="mt-6 space-y-3 flex-1">
                   {plan.features.map((f) => (
@@ -243,9 +192,11 @@ const Pricing = () => {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left p-4 font-semibold text-foreground">Feature</th>
-                  <th className="p-4 font-semibold text-foreground text-center">Starter</th>
-                  <th className="p-4 font-semibold text-primary text-center">Professional</th>
-                  <th className="p-4 font-semibold text-foreground text-center">Enterprise</th>
+                  {TIERS.map((tier) => (
+                    <th key={tier.id} className={`p-4 font-semibold text-center ${tier.id === 2 ? "text-primary" : "text-foreground"}`}>
+                      {tier.name}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -255,32 +206,24 @@ const Pricing = () => {
                     className={i % 2 === 0 ? "bg-secondary/20" : ""}
                   >
                     <td className="p-4 font-medium text-foreground">{row.feature}</td>
-                    {(["starter", "pro", "enterprise"] as const).map((col) => {
-                      const val = row[col];
-                      return (
-                        <td key={col} className="p-4 text-center">
-                          {typeof val === "boolean" ? (
-                            val ? (
-                              <Check className="h-4 w-4 text-green-500 mx-auto" />
-                            ) : (
-                              <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
-                            )
-                          ) : (
-                            <span className={col === "pro" ? "font-semibold text-primary" : "text-foreground"}>
-                              {val}
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
+                    {row.values.map((val, idx) => (
+                      <td key={idx} className="p-4 text-center">
+                        {val ? (
+                          <Check className="h-4 w-4 text-green-500 mx-auto" />
+                        ) : (
+                          <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
-                {/* Price row */}
                 <tr className="border-t border-border font-bold">
                   <td className="p-4 text-foreground">Price (Monthly)</td>
-                  <td className="p-4 text-center text-foreground">₹999</td>
-                  <td className="p-4 text-center text-primary">₹1,999</td>
-                  <td className="p-4 text-center text-foreground">Custom</td>
+                  {TIERS.map((tier) => (
+                    <td key={tier.id} className={`p-4 text-center ${tier.id === 2 ? "text-primary" : "text-foreground"}`}>
+                      ₹{tier.price.toLocaleString("en-IN")}
+                    </td>
+                  ))}
                 </tr>
               </tbody>
             </table>

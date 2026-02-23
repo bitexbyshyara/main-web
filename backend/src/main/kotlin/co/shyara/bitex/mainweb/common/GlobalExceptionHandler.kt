@@ -2,6 +2,7 @@ package co.shyara.bitex.mainweb.common
 
 import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -75,6 +76,19 @@ class GlobalExceptionHandler {
                 error = "PAYLOAD_TOO_LARGE",
                 message = "Upload size exceeds the allowed limit"
             )
+        )
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrity(ex: DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+        log.warn("Data integrity violation: {}", ex.message)
+        val message = when {
+            ex.message?.contains("users_email_key", ignoreCase = true) == true -> "Email already registered"
+            ex.message?.contains("tenants_slug_key", ignoreCase = true) == true -> "Please try again"
+            else -> "A conflict occurred with existing data"
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+            ErrorResponse(error = "CONFLICT", message = message)
         )
     }
 

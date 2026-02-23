@@ -8,4 +8,5 @@ import java.util.UUID
 @Repository
 interface SupportTicketRepository : JpaRepository<SupportTicket, UUID> {
     fun findAllByTenantIdOrderByCreatedAtDesc(tenantId: UUID): List<SupportTicket>
+    fun countByTenantId(tenantId: UUID): Long
 }

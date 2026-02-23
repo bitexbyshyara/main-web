@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/axios";
 import MarketingLayout from "@/components/MarketingLayout";
 import { Mail, MessageSquare, Phone, ArrowRight, Clock, Send } from "lucide-react";
 
@@ -85,13 +86,28 @@ const Contact = () => {
     defaultValues: { name: "", email: "", phone: "", restaurant: "", subject: "", message: "" },
   });
 
-  const onSubmit = (data: ContactData) => {
+  const onSubmit = async (data: ContactData) => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await api.post("/api/contact", {
+        name: data.name,
+        email: data.email,
+        phone: data.phone || undefined,
+        restaurant: data.restaurant || undefined,
+        subject: data.subject,
+        message: data.message,
+      });
       toast({ title: "Message sent!", description: "We'll get back to you within 2 hours." });
       form.reset();
+    } catch (err: any) {
+      toast({
+        title: "Failed to send",
+        description: err.response?.data?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
