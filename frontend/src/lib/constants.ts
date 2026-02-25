@@ -119,7 +119,7 @@ export const FAQS = [
   },
   {
     question: "What payment methods do you accept?",
-    answer: "We accept all major credit/debit cards, UPI, net banking, and popular wallets like Paytm and PhonePe.",
+    answer: "We accept cards, UPI, and net banking via Razorpay for BiteX subscriptions. PayPal may be added later.",
   },
   {
     question: "How quickly can I get started?",
@@ -143,6 +143,6 @@ export const FAQS = [
   },
   {
     question: "Do you have a refund policy?",
-    answer: "Yes. If you're not satisfied within the first 14 days, we offer a full refund — no questions asked.",
+    answer: "BiteX subscriptions are non-refundable once a billing period starts. You can cancel anytime and keep access until the period ends.",
   },
 ];

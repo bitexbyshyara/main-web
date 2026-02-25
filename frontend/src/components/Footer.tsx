@@ -8,7 +8,7 @@ const productLinks = [
 ];
 
 const companyLinks = [
-  { label: "About Us", href: "/contact" },
+  { label: "About Us", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -37,7 +37,7 @@ const Footer = () => (
           <div className="mt-4 space-y-2 text-sm">
             <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary shrink-0" /> support@shyara.co.in</p>
             <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary shrink-0" /> +91 95846 61610</p>
-            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary shrink-0" /> Patna, India</p>
+            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary shrink-0" /> Jai Hanuman Colony, Bazar Samiti, Mahendru, Sampatchak, Patna- 800006, Bihar</p>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ const Footer = () => (
 
       <div className="mt-8 md:mt-12 pt-5 md:pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p className="text-xs text-center sm:text-left">
-          © {new Date().getFullYear()} BiteX by Shyara Tech Solution. All rights reserved.
+          © {new Date().getFullYear()} BiteX by SHYARA TECH SOLUTION (OPC) PRIVATE LIMITED. All rights reserved.
         </p>
         <p className="text-xs flex items-center gap-1">
           Made with <Heart className="h-3 w-3 fill-red-500 text-red-500" /> for Indian Restaurants
